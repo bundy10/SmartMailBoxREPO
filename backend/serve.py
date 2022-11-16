@@ -3,61 +3,38 @@ import json
 from tkinter import SW
 from flask import Flask
 from flask import request
-import RPi.GPIO as GPIO
-import Controll
-from Controll import LED, Switch, States
-
-
-solenoid = 2
-Bled = 5
-flashes = 3
-doorswitch = 21
-Yled = 10
-button = 8
-
-GPIO.setup(solenoid, GPIO.OUT)
-GPIO.setup(Bled, GPIO.OUT)
-GPIO.setup(flashes, GPIO.OUT)
-GPIO.setup(Yled, GPIO.OUT)
-GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(doorswitch, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#Pre-Cleanup (Some I/O states stick around far longer than they should)
-GPIO.output(Yled, GPIO.LOW)
-GPIO.output(Bled, GPIO.LOW)
-GPIO.output(solenoid, GPIO.HIGH)
-GPIO.output(flashes, GPIO.LOW)
-
-
-States.state1()
+from flask import jsonify
+from flask_cors import CORS
+import led
+from led import LED, Switch, States
 
 app = Flask(__name__)
+cors = CORS(app)
 
 @app.route('/', methods=['POST'])
 def main():
-	
-	action = request.values['action']
+    
+    action = request.values['action']
 
-	led = LED(17)
+    led = LED(3)
 
-	if action == 'on':
-		led.on()
+    if action == 'on':
+        led.off()
 
-	if action == 'off':
-		led.off()
+    if action == 'off':
+        States.state1()
+        
+    if action == 'accept':
+        States.state2()
 
-	if action == 'accept':
-		States.state2
-
-	return 'success'
+    return 'success'
 
 @app.route('/switch', methods=['GET'])
 def button():
 
-	button = Switch(25)
+    button = Switch(8)
+    switchStatus = str(button.isTriggered())
 
-	response = app.response_class(
-        response={"switchStatus" : str(button.isTriggered())},
-        status=200,
-        mimetype='application/json'
-	)
-	return response
+
+    return switchStatus
+
